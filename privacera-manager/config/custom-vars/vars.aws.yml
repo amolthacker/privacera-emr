@@ -1,0 +1,9 @@
+#This variables enable AWS related properties
+#Note: Please update all mandatory fields. Search for <PLEASE_CHANGE>
+
+CLOUD_SERVICE: "aws"
+K8S_PROVIDER: "aws"
+DISCOVERY_FS_PREFIX: "s3a://"
+#AWS Region where Privacera is installed
+#AWS_REGION: "us-east-1"
+AWS_REGION: "us-west-1"

@@ -1,0 +1,14 @@
+#This variable uniquely identifies your environment. Only alphanumeric and dashes are allowed. Please don't use spaces, dots or special characters.
+DEPLOYMENT_ENV_NAME: "art-privacera-demo"
+
+#Fully qualified name for the Privacera Portal host
+#app_hostname: ""
+#Host IP required to connect kafka from databricks
+#app_ip: ""
+
+#Set this value, unless the server doesn't have access to internet
+privacera_hub_user: "amol"
+privacera_hub_password: "<provided-password>"
+
+PRIVACERA_IMAGE_TAG: "rel.r.4.2.1.72"
+PRIVACERA_BASE_DOWNLOAD_URL: "https://privacera.s3.amazonaws.com/rel/rel.r.4.2.1.72/cloud"

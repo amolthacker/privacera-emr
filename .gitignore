@@ -348,3 +348,11 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+
+# Project Specific
+.creds/
+misc/
+ww_customers_data.csv
+*.out
+*.bak

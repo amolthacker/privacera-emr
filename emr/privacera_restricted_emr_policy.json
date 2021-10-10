@@ -1,0 +1,27 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": ["glue:*","ec2:*"],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::*.elasticmapreduce/*",
+                "arn:aws:s3:::art-privacera-demo-emr-artifacts",
+                "arn:aws:s3:::art-privacera-demo-emr-artifacts/*",
+                "arn:aws:s3:::art-privacera-demo-emr-logs",
+                "arn:aws:s3:::art-privacera-demo-emr-logs/*",
+                "arn:aws:s3:::art-privacera-demo-emr-warehouse",
+                "arn:aws:s3:::art-privacera-demo-emr-warehouse/*",
+                "arn:aws:s3:::art-privacera-demo-emr-data",
+                "arn:aws:s3:::art-privacera-demo-emr-data/*"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,333 @@
+{
+    "Parameters": {
+      "CLUSTERNAME": {
+        "Description": "Name of the emr cluster",
+        "Type": "String",
+        "Default": "art-privacera-demo-emr"
+      },
+      "S3REGION": {
+        "Description": "aws region name",
+        "Type": "String",
+        "Default": "us-east-1"
+      },
+      "S3CloudBaseUrl": {
+        "Description": "S3 Path where Privacera packages are downloaded",
+        "Type": "String",
+        "Default": "s3://art-privacera-demo-emr-artifacts/demo"
+      },
+      "RangerHost": {
+        "Description": "IP or host name of ranger docker ",
+        "Type": "String",
+        "Default": ""
+      },
+      "SolrHost": {
+        "Description": "IP or host name of Solr docker ",
+        "Type": "String",
+        "Default": ""
+      },
+      "SlaveSecurityGroup": {
+        "Description": "Emr worker/slave node security group",
+        "Type": "String",
+        "Default": "sg-abc"
+      },
+      "MasterSecurityGroup": {
+        "Description": "Emr master/edge node security group",
+        "Type": "String",
+        "Default": "sg-xyz"
+      },
+      "Ec2SubnetId": {
+        "Description": "Ec2 subnet id",
+        "Type": "String",
+        "Default": "subnet-xyz"
+      },
+      "KDCName": {
+        "Description": "KDC Name",
+        "Type": "String",
+        "Default": "PRIVACERA_KDC_EMRFS"
+      },
+      "KdcAdminPassword": {
+        "Description": "KDC admin user password",
+        "Type": "String",
+        "Default": "padmin"
+      },
+      "HiveMetaStoreS3Path": {
+        "Description": "Hive metastore s3 path",
+        "Type": "String",
+        "Default": "s3://art-privacera-demo-emr-warehouse/hive_warehouse/"
+      },
+      "Ec2KeyName": {
+        "Description": "Ec2 keypair name",
+        "Type": "String",
+        "Default": "art-privacera-demo-sshkey"
+      },
+      "EMRJobFlowRole": {
+        "Description": "EMR ec2 role",
+        "Type": "String",
+        "Default": "privacera_emr_restricted_role"
+      },
+      "Market": {
+        "Description": "Ec2 Instance market type",
+        "Default": "SPOT",
+        "Type": "String"
+      },
+      "CustomConfZipName": {
+        "Description": "Custom conf zip name",
+        "Default": "cust_conf.zip",
+        "Type": "String"
+      },
+      "EMRVersion": {
+        "Description": "Emr version",
+        "Type": "String",
+        "Default": "emr-5.32.0"
+      },
+      "DataserverDomain": {
+        "Description": "Privacera Dataserver Domain",
+        "Type": "String",
+        "Default": ".ec2.internal"
+      },
+      "ROLEMAPPING": {
+        "Description": "IAM role mapping to access Aws services using EMRFS ",
+        "Type": "String",
+        "Default": "arn:aws:iam::326358521766:role/PrivaceraEMRDataserverRole=u:hadoop"
+      },
+      "RangerCustomConfZipName": {
+        "Description": "Ranger Custom conf zip full S3/HTTP Path",
+        "Default": "s3://art-privacera-demo-emr-artifacts/demo/ranger_cust_conf.zip",
+        "Type": "String"
+      }
+    },
+    "Resources": {
+      "EMRCLUSTER": {
+        "Type": "AWS::EMR::Cluster",
+        "Properties": {
+          "Name": {
+            "Ref": "CLUSTERNAME"
+          },
+          "KerberosAttributes": {
+            "Realm": "EC2.INTERNAL",
+            "KdcAdminPassword": {
+              "Ref": "KdcAdminPassword"
+            }
+          },
+          "SecurityConfiguration": {
+            "Ref": "KDCName"
+          },
+          "VisibleToAllUsers": true,
+          "EbsRootVolumeSize": 50,
+          "Instances": {
+            "MasterInstanceGroup": {
+              "InstanceCount": 1,
+              "InstanceType": "r5.xlarge",
+              "Market": {
+                "Fn::Sub": "${Market}"
+              },
+              "Name": "Master Instance Group"
+            },
+            "CoreInstanceGroup": {
+              "InstanceCount": 2,
+              "InstanceType": "r5.xlarge",
+              "Market": {
+                "Fn::Sub": "${Market}"
+              },
+              "Name": "Core Instance Group"
+            },
+            "Ec2KeyName": {
+              "Ref": "Ec2KeyName"
+            },
+            "EmrManagedSlaveSecurityGroup": {
+              "Fn::Sub": "${SlaveSecurityGroup}"
+            },
+            "EmrManagedMasterSecurityGroup": {
+              "Fn::Sub": "${MasterSecurityGroup}"
+            },
+            "Ec2SubnetId": {
+              "Fn::Sub": "${Ec2SubnetId}"
+            },
+            "TerminationProtected": false
+          },
+          "BootstrapActions": [
+            {
+              "Name": "InstallDataserverWatcher",
+              "ScriptBootstrapAction": {
+                "Path": {
+                  "Fn::Sub": "${S3CloudBaseUrl}/install_watcher.sh"
+                },
+                "Args": [
+                  {
+                    "Fn::Sub": "${S3CloudBaseUrl}"
+                  },
+                  {
+                    "Fn::Sub": "http://${SolrHost}:8983/solr/ranger_audits"
+                  },
+                  {
+                    "Fn::Sub": "http://${RangerHost}:6080"
+                  },
+                  {
+                    "Ref": "S3REGION"
+                  },
+                  {
+                    "Ref": "CustomConfZipName"
+                  }
+                ]
+              }
+            }
+          ],
+          "Applications": [
+            {
+              "Name": "Hive"
+            },
+            {
+              "Name": "Spark"
+            },
+            {
+              "Name": "Presto"
+            },
+            {
+              "Name": "Zeppelin"
+            },
+            {
+              "Name": "Livy"
+            },
+            {
+              "Name": "Hue"
+            }
+          ],
+          "Configurations": [
+            {
+              "Classification": "spark",
+              "ConfigurationProperties": {
+                "maximizeResourceAllocation": "true"
+              },
+              "Configurations": []
+            },
+            {
+                "Classification":"spark-defaults",
+                "ConfigurationProperties":{
+                  "spark.sql.extensions":"org.apache.ranger.authorization.spark.authorizer.RangerSparkSQLExtension",
+                  "spark.databricks.clusterUsageTags.clusterName":"art-privacera-demo-emr",
+                  "spark.privacera.spark.clusterType":"emr",
+                  "spark.driver.extraJavaOptions":"-Djavaagent=/usr/lib/spark/jars/ranger-spark-plugin-faccess-2.1.0-SNAPSHOT.jar"
+                }
+            },
+            {
+              "Classification": "hive-site",
+              "ConfigurationProperties": {
+                "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory",
+                "hive.server2.enable.doAs": "false",
+                "parquet.column.index.access": "true",
+                "fs.s3a.impl": "com.amazon.ws.emr.hadoop.fs.EmrFileSystem",
+                "hive.metastore.warehouse.dir": {
+                  "Ref": "HiveMetaStoreS3Path"
+                }
+              }
+            },
+            {
+              "Classification": "spark-hive-site",
+              "ConfigurationProperties": {
+                "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory",
+                "hive.metastore.warehouse.dir": {
+                  "Ref": "HiveMetaStoreS3Path"
+                }
+              }
+            },
+            {
+              "Classification": "livy-conf",
+              "ConfigurationProperties": {
+                "livy.impersonation.enabled": "true"
+              }
+            },
+            {
+              "Classification": "core-site",
+              "ConfigurationProperties": {
+                "hadoop.proxyuser.livy.groups": "*",
+                "hadoop.proxyuser.livy.hosts": "*",
+                "fs.s3.authorization.roleMapping": {
+                  "Ref": "ROLEMAPPING"
+                }
+              }
+            },
+            {
+              "Classification": "presto-connector-hive",
+              "ConfigurationProperties": {
+                "hive.metastore": "glue",
+                "hive.allow-drop-table": "true",
+                "hive.allow-add-column": "true",
+                "hive.allow-rename-column": "true",
+                "connector.name": "hive-hadoop2",
+                "hive.config.resources": "/etc/hadoop/conf/core-site.xml,/etc/hadoop/conf/hdfs-site.xml",
+                "hive.s3-file-system-type": "EMRFS",
+                "hive.hdfs.impersonation.enabled": "false",
+                "hive.allow-drop-column": "true",
+                "hive.allow-rename-table": "true"
+              }
+            }
+          ],
+          "LogUri": {
+            "Fn::Sub": "s3://art-privacera-demo-emr-logs"
+          },
+          "JobFlowRole": {
+            "Ref": "EMRJobFlowRole"
+          },
+          "ServiceRole": "EMR_DefaultRole",
+          "ReleaseLabel": {
+            "Fn::Sub": "${EMRVersion}"
+          }
+        }
+      },
+      "RangerPlugin": {
+        "Type": "AWS::EMR::Step",
+        "Properties": {
+          "ActionOnFailure": "CONTINUE",
+          "HadoopJarStep": {
+            "Args": [
+              {
+                "Fn::Sub": "${S3CloudBaseUrl}/download_setup.sh"
+              },
+              {
+                "Fn::Sub": "${S3CloudBaseUrl}"
+              },
+              {
+                "Fn::Sub": "http://${SolrHost}:8983/solr/ranger_audits"
+              },
+              {
+                "Fn::Sub": "http://${RangerHost}:6080"
+              },
+              {
+                "Ref": "RangerCustomConfZipName"
+              }
+            ],
+            "Jar": {
+              "Fn::Sub": "s3://${S3REGION}.elasticmapreduce/libs/script-runner/script-runner.jar"
+            }
+          },
+          "Name": "setup_ranger_plugin",
+          "JobFlowId": {
+            "Ref": "EMRCLUSTER"
+          }
+        }
+      },
+      "UploadDataserverBuildInHdfs": {
+        "Type": "AWS::EMR::Step",
+        "Properties": {
+          "ActionOnFailure": "CONTINUE",
+          "HadoopJarStep": {
+            "Args": [
+              {
+                "Fn::Sub": "${S3CloudBaseUrl}/upload_dataserver_in_cluster_hdfs.sh"
+              },
+              {
+                "Fn::Sub": "${S3CloudBaseUrl}"
+              }
+            ],
+            "Jar": {
+              "Fn::Sub": "s3://${S3REGION}.elasticmapreduce/libs/script-runner/script-runner.jar"
+            }
+          },
+          "Name": "upload_dataserver_in_hdfs",
+          "JobFlowId": {
+            "Ref": "EMRCLUSTER"
+          }
+        }
+      }
+    }
+  }

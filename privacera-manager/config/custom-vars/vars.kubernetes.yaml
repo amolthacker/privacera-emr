@@ -1,0 +1,34 @@
+#This variables enable Kubernetes related properties
+#Note: Please update all mandatory fields. Search for <PLEASE_CHANGE>
+
+K8S_CLUSTER_NAME: "art-privacera-demo-eks-managed.us-west-1.eksctl.io"
+
+#Name of the deployment. You can use privacera-prod, privacera-stage, etc
+K8S_NAMESPACE: "privacera"
+
+#Zones for Storage. For now, only one zone should be given
+#K8S_STORAGE_ZONES:
+#  - "us-east-1a"
+  
+#Default as 1, Recommended value is 32Gi and 3 for CLUSTER SIZE
+ZOOKEEPER_K8S_PVC_STORAGE_SIZE: "5Gi"
+ZOOKEEPER_CLUSTER_SIZE: 1
+
+#Default as 1, Recommended value is 32Gi and 3 for CLUSTER SIZE
+SOLR_K8S_PVC_STORAGE_SIZE: "5Gi"
+SOLR_K8S_CLUSTER_SIZE: 1
+
+#If your storage is encrypted, then set the below property
+#K8S_PV_ENCRYPTED: "true"
+#For AWS, it is ARN with keyId. E.g. arn:aws:kms:us-east-1:<account>:key/<hash>
+#K8S_PV_KEY: ""
+
+PRIVACERA_INSTALL_MODE: "kubernetes"
+
+#Uncomment to obtain external loadbalancer. Default values are "false"
+#PORTAL_K8S_LOADBALANCER_EXTERNAL: "true"
+#AUDITSERVER_K8S_LOADBALANCER_EXTERNAL: "true"
+#SOLR_K8S_LOADBALANCER_EXTERNAL: "true"
+#RANGER_K8S_LOADBALANCER_EXTERNAL: "true"
+#KAFKA_K8S_LOADBALANCER_EXTERNAL: "true"
+#DISCOVERY_K8S_LOADBALANCER_EXTERNAL: "true"
